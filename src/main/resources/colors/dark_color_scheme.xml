@@ -7,13 +7,6 @@
         <property name="originalScheme">Islands Dark</property>
     </metaInfo>
 
-    <option name="LINE_SPACING" value="1.2"/>
-
-    <font>
-        <option name="EDITOR_FONT_NAME" value="JetBrains Mono"/>
-        <option name="EDITOR_FONT_SIZE" value="16"/>
-    </font>
-
     <colors>
         <option name="ADDED_LINES_COLOR" value="549159"/>
         <option name="ANNOTATIONS_COLOR" value="8D9199"/>
@@ -32,7 +25,7 @@
         <option name="FILESTATUS_COPIED" value="73BD79"/>
         <option name="FILESTATUS_DELETED" value="6F737A"/>
         <option name="FILESTATUS_IDEA_FILESTATUS_DELETED_FROM_FILE_SYSTEM" value="6F737A"/>
-        <option name="FILESTATUS_IDEA_FILESTATUS_IGNORED" value="D69A6B"/>
+        <option name="FILESTATUS_IDEA_FILESTATUS_IGNORED" value="5C6370"/>
         <option name="FILESTATUS_IDEA_FILESTATUS_MERGED_WITH_BOTH_CONFLICTS" value="DE6A66"/>
         <option name="FILESTATUS_IDEA_FILESTATUS_MERGED_WITH_CONFLICTS" value="DE6A66"/>
         <option name="FILESTATUS_IDEA_FILESTATUS_MERGED_WITH_PROPERTY_CONFLICTS" value="DE6A66"/>

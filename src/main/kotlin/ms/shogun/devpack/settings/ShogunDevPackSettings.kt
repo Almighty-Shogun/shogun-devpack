@@ -18,12 +18,6 @@ import com.intellij.openapi.components.PersistentStateComponent
 class ShogunDevPackSettings : PersistentStateComponent<ShogunDevPackSettings.State> {
     private var settingsState = State()
 
-    var hideProjectViewPath: Boolean
-        get() = settingsState.hideProjectViewPath
-        set(value) {
-            settingsState.hideProjectViewPath = value
-        }
-
     var codexEnabled: Boolean
         get() = settingsState.codexEnabled
         set(value) {
@@ -165,7 +159,6 @@ class ShogunDevPackSettings : PersistentStateComponent<ShogunDevPackSettings.Sta
     /**
      * Serializable settings values.
      *
-     * @property hideProjectViewPath Whether the Project View should hide root path text.
      * @property codexEnabled Whether the Codex terminal integration is enabled.
      * @property codexPath Optional custom Codex executable path.
      * @property claudeEnabled Whether the Claude terminal integration is enabled.
@@ -193,7 +186,6 @@ class ShogunDevPackSettings : PersistentStateComponent<ShogunDevPackSettings.Sta
      * @since 1.0.0
      */
     data class State(
-        var hideProjectViewPath: Boolean = false,
         var codexEnabled: Boolean = true,
         var codexPath: String? = null,
         var claudeEnabled: Boolean = true,

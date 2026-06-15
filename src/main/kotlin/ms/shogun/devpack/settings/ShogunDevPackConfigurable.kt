@@ -7,12 +7,11 @@ import javax.swing.JComponent
 
 import com.intellij.util.ui.JBUI
 import com.intellij.ui.components.JBCheckBox
-import com.intellij.ide.projectView.ProjectView
-import com.intellij.openapi.project.ProjectManager
 import com.intellij.openapi.options.SearchableConfigurable
 
 import ms.shogun.devpack.ShogunBundle.message
 import ms.shogun.devpack.settings.ui.SettingsUi
+import ms.shogun.devpack.projectView.ProjectViewUrlSetting
 
 /**
  * Application settings page for Shogun's DevPack.
@@ -41,38 +40,21 @@ class ShogunDevPackConfigurable : SearchableConfigurable {
     }
 
     override fun isModified(): Boolean {
-        val settings = ShogunDevPackSettings.instance
-
-        return hideProjectPathCheckBox?.isSelected != settings.hideProjectViewPath
+        return hideProjectPathCheckBox?.isSelected != ProjectViewUrlSetting.isHidden()
     }
 
     override fun apply() {
-        val settings = ShogunDevPackSettings.instance
+        val hidden = hideProjectPathCheckBox?.isSelected == true
 
-        settings.hideProjectViewPath = hideProjectPathCheckBox?.isSelected == true
-
-        refreshProjectViews()
+        ProjectViewUrlSetting.setHidden(hidden)
+        ProjectViewUrlSetting.refreshOpenProjectViews()
     }
 
     override fun reset() {
-        val settings = ShogunDevPackSettings.instance
-
-        hideProjectPathCheckBox?.isSelected = settings.hideProjectViewPath
+        hideProjectPathCheckBox?.isSelected = ProjectViewUrlSetting.isHidden()
     }
 
     override fun disposeUIResources() {
         hideProjectPathCheckBox = null
-    }
-
-    /**
-     * Refreshes every open Project View after changing presentation settings.
-     *
-     * @author Almighty-Shogun
-     * @since 1.0.0
-     */
-    private fun refreshProjectViews() {
-        ProjectManager.getInstance().openProjects.forEach { project ->
-            ProjectView.getInstance(project).refresh()
-        }
     }
 }

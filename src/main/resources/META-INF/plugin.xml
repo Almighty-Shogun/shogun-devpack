@@ -110,8 +110,6 @@
             bundle="messages.MyMessageBundle"
             key="settings.project.display-name"/>
 
-        <treeStructureProvider implementation="ms.shogun.devpack.projectView.ProjectPathTreeStructureProvider"/>
-
         <toolWindow
             id="Codex"
             anchor="right"
