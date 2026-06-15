@@ -1,0 +1,17 @@
+using Microsoft.Extensions.Logging;
+using AlmightyShogun.ConsoleCommands;
+
+namespace ${NAMESPACE};
+
+// TODO: Add command description
+[ConsoleCommand("${NAME_NORMALIZED}", "")]
+public sealed class ${NAME}(ILogger<ConsoleCommandBase> logger) : ConsoleCommandBase(logger)
+{
+    /// <inheritDocs/>
+    public Task ExecuteAsync()
+    {
+        // TODO: Add command code here...
+
+        return Task.CompletedTask;
+    }
+}

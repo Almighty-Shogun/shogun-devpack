@@ -1,0 +1,19 @@
+<template>
+    <!-- Add code here -->
+</template>
+
+<script setup lang="ts">
+// imports
+
+// refs
+
+// variables, composable, store
+
+// definers
+
+// computes
+
+// methods
+
+// onMounted, etc...
+</script>

@@ -1,0 +1,55 @@
+name: 🚀 Release plugin
+
+on:
+    release:
+        types: [ released ]
+
+permissions:
+    contents: write
+
+jobs:
+    build-plugin:
+        name: 🚀 Build and upload plugin
+        runs-on: ubuntu-latest
+
+        steps:
+            -   name: ⚙️ Maximize build space
+                uses: jlumbroso/free-disk-space@v1.3.1
+                with:
+                    tool-cache: false
+                    large-packages: false
+
+            -   name: 👀 Checkout
+                uses: actions/checkout@v6
+
+            -   name: ⚙️ Setup Java
+                uses: actions/setup-java@v5
+                with:
+                    distribution: zulu
+                    java-version: 21
+
+            -   name: ⚙️ Setup Gradle
+                uses: gradle/actions/setup-gradle@v6
+                with:
+                    cache-read-only: true
+
+            -   name: 🔨 Build plugin
+                run: |
+                    plugin_version="${{ github.event.release.tag_name }}"
+                    ./gradlew buildPlugin --no-daemon -PpluginVersion="$plugin_version"
+
+            -   name: 🚀 Upload plugin ZIP to release
+                run: gh release upload ${{ github.event.release.tag_name }} ./build/distributions/*
+                env:
+                    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+#               This should be uncommented on the next release,
+#            -   name: 🚀 Publish plugin to JetBrains Marketplace
+#                run: |
+#                    plugin_version="${{ github.event.release.tag_name }}"
+#                    ./gradlew publishPlugin --no-daemon -PpluginVersion="$plugin_version"
+#                env:
+#                    PUBLISH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
+#                    CERTIFICATE_CHAIN: ${{ secrets.CERTIFICATE_CHAIN }}
+#                    PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+#                    PRIVATE_KEY_PASSWORD: ${{ secrets.PRIVATE_KEY_PASSWORD }}

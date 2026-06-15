@@ -1,0 +1,13 @@
+using AlmightyShogun.Utils;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace ${NAMESPACE};
+
+public class ${NAME} : IService
+{
+    /// <inheritdoc/>
+    public void ConfigureService(IServiceCollection serviceCollection)
+    {
+        // TODO: Add code here
+    }
+}

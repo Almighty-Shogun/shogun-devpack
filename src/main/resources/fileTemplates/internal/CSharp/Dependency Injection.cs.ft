@@ -1,0 +1,10 @@
+namespace ${NAMESPACE};
+
+#if(${TYPE} == "class")
+public class ${NAME} : I${NAME}
+#else
+public interface ${NAME}
+#end
+{
+    // TODO: Add code here...
+}

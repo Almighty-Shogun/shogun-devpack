@@ -1,0 +1,18 @@
+# Title 1
+
+---
+
+**Bold text**
+
+_Underscored text_
+
+~~Striped through text~~
+
+```php
+<?php
+// code block
+```
+
+[Link](https://shogun.ms)
+
+![](https://cdn.shogun.ms/assets/branding/app-icon-256.svg)

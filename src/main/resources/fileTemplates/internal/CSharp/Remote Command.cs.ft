@@ -1,0 +1,18 @@
+using Microsoft.Extensions.Logging;
+using AlmightyShogun.RemoteCommands;
+
+namespace ${NAMESPACE};
+
+// TODO: Add remote command description
+[RemoteCommand("${NAME_NORMALIZED}", "")]
+public sealed class ${NAME} : RemoteCommand<string>
+{
+    /// <inheritdoc/>
+    public override async Task HandleCommandAsync(string message, NetworkStream stream)
+    {
+        // TODO: Add remote command code here.
+
+        // optional respond to remote command:
+        // await WriteResponseAsync(stream, new {});
+    }
+}

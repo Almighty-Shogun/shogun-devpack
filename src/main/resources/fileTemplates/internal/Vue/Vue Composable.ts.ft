@@ -1,0 +1,9 @@
+export function ${COMPOSABLE_NAME}(): ${COMPOSABLE_RETURN_TYPE} {
+    // TODO: Add code...
+
+    return {};
+}
+
+type ${COMPOSABLE_RETURN_TYPE} = {
+    // TODO: Add typings...
+};

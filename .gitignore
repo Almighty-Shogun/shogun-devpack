@@ -1,0 +1,13 @@
+# IDE settings
+.idea/*
+!.idea/
+
+!.idea/.name
+!.idea/icon.svg
+
+# Build output and caches
+.gradle/
+.intellijPlatform/
+.kotlin/
+build/
+out/
