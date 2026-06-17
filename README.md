@@ -40,7 +40,7 @@ git clone https://github.com/Almighty-Shogun/shogun-devpack.git
 
 ./gradlew buildPlugin # Build the plugin locally
 ./gradlew runIde # Run the plugin in a sandbox IDE
-.gradlew verifyPluginProjectConfiguration verifyPluginStructure # Run the main verification
+./gradlew verifyPluginProjectConfiguration verifyPluginStructure # Run the main verification
 ```
 
 ## 📦 Semantic Versioning (SemVer)
