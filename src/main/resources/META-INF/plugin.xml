@@ -206,6 +206,14 @@
                 <keyboard-shortcut first-keystroke="ctrl NUMPAD9" keymap="$default"/>
             </action>
 
+            <action
+                id="ShogunDevPack.SortLinesByLength"
+                class="ms.shogun.devpack.lineSorter.SortLinesByLengthAction"
+                icon="/icons/file-code.svg">
+
+                <keyboard-shortcut first-keystroke="ctrl NUMPAD7" keymap="$default"/>
+            </action>
+
             <separator/>
 
             <action
@@ -239,6 +247,14 @@
 
             <add-to-group group-id="EditorPopupMenu" anchor="last"/>
             <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
+        </action>
+
+        <action
+            id="ShogunDevPack.SortLinesByLength.Context"
+            class="ms.shogun.devpack.lineSorter.SortLinesByLengthAction"
+            icon="/icons/file-code.svg">
+
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
         </action>
 
         <group id="ShogunDevPack.CustomFiles" popup="true" icon="/icons/logo/app-icon-16.svg">
