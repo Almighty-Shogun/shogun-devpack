@@ -48,6 +48,18 @@ class ShogunDevPackSettings : PersistentStateComponent<ShogunDevPackSettings.Sta
             settingsState.codeShareUploader = value
         }
 
+    var autoHideProjectViewOnAiToggle: Boolean
+        get() = settingsState.autoHideProjectViewOnAiToggle
+        set(value) {
+            settingsState.autoHideProjectViewOnAiToggle = value
+        }
+
+    var autoHideProjectViewOnShiftTab: Boolean
+        get() = settingsState.autoHideProjectViewOnShiftTab
+        set(value) {
+            settingsState.autoHideProjectViewOnShiftTab = value
+        }
+
     var githubGistPublic: Boolean
         get() = settingsState.githubGistPublic
         set(value) {
@@ -163,6 +175,8 @@ class ShogunDevPackSettings : PersistentStateComponent<ShogunDevPackSettings.Sta
      * @property codexPath Optional custom Codex executable path.
      * @property claudeEnabled Whether the Claude terminal integration is enabled.
      * @property claudePath Optional custom Claude executable path.
+     * @property autoHideProjectViewOnAiToggle Whether AI terminal toggles hide the Project View.
+     * @property autoHideProjectViewOnShiftTab Whether Shift Tab actions hide the Project View.
      * @property codeShareUploader Selected code sharing uploader.
      * @property githubGistPublic Whether GitHub Gist uploads should be public.
      * @property pastebinVisibility Selected Pastebin visibility.
@@ -190,6 +204,8 @@ class ShogunDevPackSettings : PersistentStateComponent<ShogunDevPackSettings.Sta
         var codexPath: String? = null,
         var claudeEnabled: Boolean = true,
         var claudePath: String? = null,
+        var autoHideProjectViewOnAiToggle: Boolean = true,
+        var autoHideProjectViewOnShiftTab: Boolean = true,
         var codeShareUploader: String = "GITHUB_GIST",
         var githubGistPublic: Boolean = false,
         var pastebinVisibility: String = "UNLISTED",
