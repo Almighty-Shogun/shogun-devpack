@@ -44,15 +44,8 @@ class CodeShotAction : AnAction() {
         val end = selectionModel.selectionEnd
         val start = selectionModel.selectionStart
 
-        val picture = try {
-            selectionModel.removeSelection()
-
-            val fragment = CodeFragment.createCodeFragmentComponent(editor, start, end)
-
-            CodeScreenshotRenderer.render(fragment)
-        } finally {
-            selectionModel.setSelection(start, end)
-        }
+        val fragment = CodeFragment.createCodeFragmentComponent(editor, start, end)
+        val picture = CodeScreenshotRenderer.render(fragment)
 
         when (CodeShotOutputTarget.from(ShogunDevPackSettings.instance.codeShotOutputTarget)) {
             CodeShotOutputTarget.CLIPBOARD -> copyImageToClipboard(project, picture)
@@ -108,7 +101,7 @@ class CodeShotAction : AnAction() {
             progressMessage = message("code-shot.progress.freeimage-host"),
             successMessageKey = "code-shot.notification.freeimage-host.success",
             failureMessageKey = "code-shot.notification.freeimage-host.failure",
-            uploader = FreeimageHostUploader::upload,
+            uploader = FreeimageHostUploader::upload
         )
     }
 
@@ -128,7 +121,7 @@ class CodeShotAction : AnAction() {
             progressMessage = message("code-shot.progress.imgbb"),
             successMessageKey = "code-shot.notification.imgbb.success",
             failureMessageKey = "code-shot.notification.imgbb.failure",
-            uploader = ImgBbUploader::upload,
+            uploader = ImgBbUploader::upload
         )
     }
 
@@ -148,7 +141,7 @@ class CodeShotAction : AnAction() {
             progressMessage = message("code-shot.progress.custom-server"),
             successMessageKey = "code-shot.notification.custom-server.success",
             failureMessageKey = "code-shot.notification.custom-server.failure",
-            uploader = CodeShotCustomServerUploader::upload,
+            uploader = CodeShotCustomServerUploader::upload
         )
     }
 

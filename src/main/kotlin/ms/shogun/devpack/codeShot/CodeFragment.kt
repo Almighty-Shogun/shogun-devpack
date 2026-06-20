@@ -1,6 +1,5 @@
 package ms.shogun.devpack.codeShot
 
-import java.awt.Font
 import java.awt.Graphics
 import java.awt.Dimension
 import java.awt.Graphics2D
@@ -11,40 +10,33 @@ import javax.swing.JPanel
 import javax.swing.JComponent
 
 import kotlin.math.max
-import kotlin.math.min
 
 import com.intellij.util.ui.UIUtil
-import com.intellij.util.DocumentUtil
-import com.intellij.openapi.editor.Editor
 import com.intellij.util.ui.StartupUiUtil
+import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.ex.EditorEx
-import com.intellij.openapi.editor.impl.EditorImpl
 import com.intellij.openapi.editor.LogicalPosition
-import com.intellij.openapi.editor.ex.util.EditorUtil
+import com.intellij.openapi.editor.impl.EditorImpl
 import com.intellij.openapi.editor.colors.EditorColors
-import com.intellij.openapi.editor.colors.CodeInsightColors
 import com.intellij.openapi.editor.ex.util.EditorUIUtil
 import com.intellij.openapi.editor.markup.TextAttributes
+import com.intellij.openapi.editor.colors.CodeInsightColors
 import com.intellij.openapi.editor.colors.EditorColorsScheme
 
 /**
- * Swing component that paints a selected editor range for screenshot rendering.
+ * Swing component that paints prepared editor text for screenshot rendering.
  *
  * @param editor Editor instance to paint.
- * @param startOffset First selected document offset.
- * @param endOffset Exclusive selected document offset.
  *
  * @author Almighty-Shogun
  * @since 1.0.0
  */
-class CodeFragment(private val editor: EditorEx, private val startOffset: Int, private val endOffset: Int) : JPanel() {
+class CodeFragment private constructor(private val editor: EditorEx) : JPanel() {
     init {
         this.editor.isPurePaintingMode = true
 
         try {
-            this.withScreenshotRenderingState {
-                this.doInitialize()
-            }
+            this.doInitialize()
         } finally {
             this.editor.isPurePaintingMode = false
         }
@@ -57,11 +49,22 @@ class CodeFragment(private val editor: EditorEx, private val startOffset: Int, p
      * @since 1.0.0
      */
     private fun doInitialize() {
+        val settings = this.editor.settings
+
+        val originalColorScheme = this.editor.colorsScheme
+        val originalCaretRowShown = settings.isCaretRowShown
+        val originalHighlightSelectionOccurrences = settings.isHighlightSelectionOccurrences
+
         val newRendering = this.editor is EditorImpl
         val savedScrollOffset = if (newRendering) 0 else this.editor.scrollingModel.horizontalScrollOffset
 
         val foldingModel = this.editor.foldingModel
         val isFoldingEnabled = foldingModel.isFoldingEnabled
+
+        this.editor.colorsScheme = cleanScreenshotColorScheme(originalColorScheme)
+
+        settings.isCaretRowShown = false
+        settings.isHighlightSelectionOccurrences = false
 
         foldingModel.isFoldingEnabled = false
 
@@ -71,26 +74,33 @@ class CodeFragment(private val editor: EditorEx, private val startOffset: Int, p
         val renderScale = CodeScreenshotRenderer.getRenderScale(this.editor.component)
 
         try {
+            val startLine = 0
+
             val document = this.editor.document
-            val selectionEndOffset = endOffset.coerceAtLeast(startOffset)
-            val lastSelectedOffset = (selectionEndOffset - 1).coerceAtLeast(startOffset)
-            val startLine = document.getLineNumber(startOffset)
-            val endLine = document.getLineNumber(lastSelectedOffset) + 1
-            val widthAdjustment = if (newRendering) EditorUtil.getSpaceWidth(Font.PLAIN, editor) else 0
-            val endRangeOffset = if (endLine < document.lineCount) document.getLineEndOffset(max(0, endLine - 1)) else document.textLength
-            val indentStart = commonSelectedLineIndent(startLine, endLine)
+            val endLine = document.lineCount
+
+            val indentStart = CodeSelection.commonLineIndent(this.editor, startLine, endLine)
+
             val cropStart = (indentStart - HORIZONTAL_RENDER_BLEED).coerceAtLeast(0)
             val cropBleed = indentStart - cropStart
 
-            textImageWidth = min(
-                this.editor.getMaxWidthInRange(document.getLineStartOffset(startLine), endRangeOffset) + widthAdjustment - cropStart + HORIZONTAL_RENDER_BLEED,
-                CodeScreenshotRenderer.getWidthLimit(editor),
-            )
+            val textRightEdge = CodeSelection.textRightEdge(this.editor, startLine, endLine)
 
-            val p1 = this.editor.logicalPositionToXY(LogicalPosition(startLine, 0))
-            val p2 = this.editor.logicalPositionToXY(LogicalPosition(max(endLine, startLine - 1), 0))
+            textImageWidth = (textRightEdge - cropStart + HORIZONTAL_RENDER_BLEED).coerceAtLeast(1)
 
-            textImageHeight = if (p2.y - p1.y == 0) this.editor.lineHeight else p2.y - p1.y
+            val topPoint = this.editor.logicalPositionToXY(LogicalPosition(startLine, 0))
+            val bottomPoint = this.editor.logicalPositionToXY(LogicalPosition(max(endLine, startLine - 1), 0))
+
+            textImageHeight = if (bottomPoint.y - topPoint.y == 0) {
+                this.editor.lineHeight
+            } else {
+                bottomPoint.y - topPoint.y
+            }
+
+            this.editor.component.setSize(textImageWidth, textImageHeight)
+            this.editor.contentComponent.setSize(textImageWidth, textImageHeight)
+
+            this.editor.component.doLayout()
 
             if (savedScrollOffset > 0) {
                 this.editor.scrollingModel.scrollHorizontally(0)
@@ -100,7 +110,7 @@ class CodeFragment(private val editor: EditorEx, private val startOffset: Int, p
                 this.editor.contentComponent,
                 scaledSize(textImageWidth, renderScale),
                 scaledSize(textImageHeight, renderScale),
-                BufferedImage.TYPE_INT_RGB,
+                BufferedImage.TYPE_INT_RGB
             )
 
             val textGraphics = textImage.graphics as Graphics2D
@@ -109,8 +119,8 @@ class CodeFragment(private val editor: EditorEx, private val startOffset: Int, p
 
             textGraphics.scale(renderScale.toDouble(), renderScale.toDouble())
 
-            textGraphics.translate(-cropStart, -p1.y)
-            textGraphics.setClip(cropStart, p1.y, textImageWidth + cropBleed, textImageHeight)
+            textGraphics.translate(-cropStart, -topPoint.y)
+            textGraphics.setClip(cropStart, topPoint.y, textImageWidth + cropBleed, textImageHeight)
 
             val wasVisible = this.editor.setCaretVisible(false)
 
@@ -123,6 +133,11 @@ class CodeFragment(private val editor: EditorEx, private val startOffset: Int, p
             }
         } finally {
             foldingModel.isFoldingEnabled = isFoldingEnabled
+
+            settings.isCaretRowShown = originalCaretRowShown
+            settings.isHighlightSelectionOccurrences = originalHighlightSelectionOccurrences
+
+            this.editor.colorsScheme = originalColorScheme
         }
 
         if (savedScrollOffset > 0) {
@@ -142,37 +157,6 @@ class CodeFragment(private val editor: EditorEx, private val startOffset: Int, p
         this.add(component)
 
         this.border = CodeScreenshotRenderer.createCodeFragmentBorder(this.editor)
-    }
-
-    /**
-     * Calculates the common indentation across selected lines.
-     *
-     * @param startLine First logical line included in the screenshot.
-     * @param endLine Exclusive logical line after the screenshot.
-     *
-     * @return Common indentation width in editor pixels.
-     *
-     * @author Almighty-Shogun
-     * @since 1.1.0
-     */
-    private fun commonSelectedLineIndent(startLine: Int, endLine: Int): Int {
-        var indentStart = Int.MAX_VALUE
-        val document = this.editor.document
-
-        for (line in startLine until endLine) {
-            if (DocumentUtil.isLineEmpty(document, line)) continue
-
-            val offset = DocumentUtil.getFirstNonSpaceCharOffset(document, line)
-            val indent = this.editor.offsetToXY(offset).x
-
-            if (indent < indentStart) {
-                indentStart = indent
-            }
-        }
-
-        return indentStart.takeUnless { indent ->
-            indent == Int.MAX_VALUE
-        } ?: 0
     }
 
     companion object {
@@ -204,50 +188,22 @@ class CodeFragment(private val editor: EditorEx, private val startOffset: Int, p
          * @since 1.0.0
          */
         fun createCodeFragmentComponent(editor: Editor, startOffset: Int, endOffset: Int): CodeFragment {
-            val editorEx = editor as EditorEx
-            val old = editorEx.backgroundColor
-            val backgroundColor = CodeScreenshotRenderer.getBackgroundColor(editor)
-
-            editorEx.backgroundColor = backgroundColor
+            val sourceEditor = editor as EditorEx
+            val selectedText = CodeSelection.text(sourceEditor, startOffset, endOffset)
+            val detachedEditor = DetachedCodeEditor.create(sourceEditor, selectedText)
+            val backgroundColor = CodeScreenshotRenderer.getBackgroundColor(sourceEditor)
 
             try {
-                val fragment = CodeFragment(editor, startOffset, endOffset)
+                detachedEditor.backgroundColor = backgroundColor
+
+                val fragment = CodeFragment(detachedEditor)
 
                 fragment.background = backgroundColor
 
                 return fragment
             } finally {
-                editorEx.backgroundColor = old
+                DetachedCodeEditor.release(detachedEditor)
             }
-        }
-    }
-
-    /**
-     * Applies temporary editor state that keeps screenshots free of transient IDE highlights.
-     *
-     * @param action Rendering action to run while temporary state is active.
-     *
-     * @author Almighty-Shogun
-     * @since 1.1.0
-     */
-    private fun withScreenshotRenderingState(action: () -> Unit) {
-        val settings = this.editor.settings
-        val originalColorScheme = this.editor.colorsScheme
-        val originalCaretRowShown = settings.isCaretRowShown
-        val originalHighlightSelectionOccurrences = settings.isHighlightSelectionOccurrences
-
-        this.editor.colorsScheme = cleanScreenshotColorScheme(originalColorScheme)
-
-        settings.isCaretRowShown = false
-        settings.isHighlightSelectionOccurrences = false
-
-        try {
-            action()
-        } finally {
-            settings.isHighlightSelectionOccurrences = originalHighlightSelectionOccurrences
-            settings.isCaretRowShown = originalCaretRowShown
-
-            this.editor.colorsScheme = originalColorScheme
         }
     }
 
