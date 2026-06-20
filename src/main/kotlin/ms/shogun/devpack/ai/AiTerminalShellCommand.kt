@@ -15,7 +15,7 @@ object AiTerminalShellCommand {
      * @param resumeCommand Command used to resume the latest project session.
      * @param freshCommand Command used to start a fresh project session.
      *
-     * @return Shell command with platform-specific fallback syntax.
+     * @return Shell command with fallback syntax.
      *
      * @author Almighty-Shogun
      * @since 1.0.0
@@ -43,7 +43,7 @@ object AiTerminalShellCommand {
     private fun shellCommand(command: List<String>): String =
         command.joinToString(" ") { argument ->
             if (SystemInfo.isWindows) {
-                windowsShellArgument(argument)
+                argument
             } else {
                 unixShellArgument(argument)
             }
@@ -60,16 +60,4 @@ object AiTerminalShellCommand {
      * @since 1.0.0
      */
     private fun unixShellArgument(argument: String): String = "'${argument.replace("'", "'\"'\"'")}'"
-
-    /**
-     * Escapes one argument for Windows `cmd.exe`.
-     *
-     * @param argument Argument to escape.
-     *
-     * @return Escaped shell argument.
-     *
-     * @author Almighty-Shogun
-     * @since 1.0.0
-     */
-    private fun windowsShellArgument(argument: String): String = "\"${argument.replace("\"", "\\\"")}\""
 }
