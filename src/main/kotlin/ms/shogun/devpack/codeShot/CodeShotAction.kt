@@ -34,7 +34,6 @@ class CodeShotAction : AnAction() {
         val project = anActionEvent.project ?: return
         val editor = FileEditorManager.getInstance(project).selectedTextEditor ?: return
 
-        val document = editor.document
         val selectionModel = editor.selectionModel
 
         if (selectionModel.blockSelectionStarts.size >= 2) {
@@ -45,15 +44,15 @@ class CodeShotAction : AnAction() {
         val end = selectionModel.selectionEnd
         val start = selectionModel.selectionStart
 
-        val startLine = document.getLineNumber(start)
-        val endLine = document.getLineNumber(end) + 1
+        val picture = try {
+            selectionModel.removeSelection()
 
-        selectionModel.removeSelection()
+            val fragment = CodeFragment.createCodeFragmentComponent(editor, start, end)
 
-        val fragment = CodeFragment.createCodeFragmentComponent(editor, startLine, endLine)
-        val picture = CodeScreenshotRenderer.render(fragment)
-
-        selectionModel.setSelection(start, end)
+            CodeScreenshotRenderer.render(fragment)
+        } finally {
+            selectionModel.setSelection(start, end)
+        }
 
         when (CodeShotOutputTarget.from(ShogunDevPackSettings.instance.codeShotOutputTarget)) {
             CodeShotOutputTarget.CLIPBOARD -> copyImageToClipboard(project, picture)
