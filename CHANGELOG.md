@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [1.1.1]
+
+### Fixed
+
+- Fixed Code Shot rendering by using a detached editor so live editor selections, caret highlights, and HTML/XML tag highlights no longer leak into screenshots.
+- Fixed Code Shot screenshots clipping the trailing characters of long selected lines.
+
 ## [1.1.0]
 
 ### Added
