@@ -13,6 +13,9 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.fileEditor.ex.FileEditorManagerEx
 
+import ms.shogun.devpack.settings.ShogunDevPackSettings
+import ms.shogun.devpack.projectView.ProjectViewToolWindow
+
 /**
  * Moves the active editor tab between split panes.
  *
@@ -28,9 +31,6 @@ abstract class ShiftTabAction(private val orientation: TabOrientation) : DumbAwa
 
         val fileEditorManager = FileEditorManagerEx.getInstanceEx(project)
         val windowManager = ToolWindowManager.getInstance(project)
-        val projectWindow = ToolWindowManager.getInstance(project).getToolWindow("Project") ?: return
-
-        if (projectWindow.isVisible) projectWindow.hide()
 
         if (!windowManager.isEditorComponentActive) return
 
@@ -69,6 +69,7 @@ abstract class ShiftTabAction(private val orientation: TabOrientation) : DumbAwa
             fileEditorManager.windows[newIndex].setAsCurrentWindow(true)
         }
 
+        hideProjectView(project, fileEditorManager)
         focusFile(project, fileEditorManager, file)
     }
 
@@ -102,5 +103,22 @@ abstract class ShiftTabAction(private val orientation: TabOrientation) : DumbAwa
 
             IdeFocusManager.getInstance(project).requestFocus(editor.contentComponent, true)
         }
+    }
+
+    /**
+     * Hides the Project View after moving a file between editor splits.
+     *
+     * @param project Current IntelliJ project.
+     * @param fileEditorManager Editor manager used to inspect split windows.
+     *
+     * @author Almighty-Shogun
+     * @since 1.1.0
+     */
+    private fun hideProjectView(project: Project, fileEditorManager: FileEditorManagerEx) {
+        if (!ShogunDevPackSettings.instance.autoHideProjectViewOnShiftTab || fileEditorManager.windows.size < 2) {
+            return
+        }
+
+        ProjectViewToolWindow.hideIfVisible(project)
     }
 }
