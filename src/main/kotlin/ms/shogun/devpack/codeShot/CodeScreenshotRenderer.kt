@@ -5,13 +5,11 @@ import java.awt.Component
 import java.awt.image.BufferedImage
 
 import javax.swing.BorderFactory
-import javax.swing.SwingUtilities
 import javax.swing.border.CompoundBorder
 
 import com.intellij.util.ui.JBUI
-import com.intellij.ui.ScreenUtil
-import com.intellij.ide.ui.UISettings
 import com.intellij.util.ui.ImageUtil
+import com.intellij.ide.ui.UISettings
 import com.intellij.ui.scale.JBUIScale
 import com.intellij.openapi.editor.Editor
 
@@ -78,29 +76,6 @@ object CodeScreenshotRenderer {
      * @since 1.0.0
      */
     fun getBackgroundColor(editor: Editor): Color = editor.colorsScheme.defaultBackground
-
-    /**
-     * Finds the maximum screenshot width from the active screen or window.
-     *
-     * @param editor Editor whose component is used to find the screen bounds.
-     *
-     * @return Maximum width allowed for a rendered screenshot.
-     *
-     * @author Almighty-Shogun
-     * @since 1.0.0
-     */
-    fun getWidthLimit(editor: Editor): Int {
-        val component = editor.component
-        val screenWidth = ScreenUtil.getScreenRectangle(component).width
-
-        if (screenWidth > 0) {
-            return screenWidth
-        }
-
-        val window = SwingUtilities.getWindowAncestor(component)
-
-        return window?.width ?: Int.MAX_VALUE
-    }
 
     /**
      * Returns the pixel scale used when painting editor contents into a screenshot.
