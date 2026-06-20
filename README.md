@@ -19,8 +19,11 @@ Core features:
 - License generation for common GitHub license templates.
 - Code Share uploads for selected code or selected files through GitHub Gist, Pastebin, or a custom server.
 - Code Shot screenshot creation from the current editor selection, with clipboard, Freeimage.host, ImgBB, and custom server outputs.
+- Code Shot rendering cleanup that avoids transient editor highlights in generated screenshots.
+- Line sorting for selected editor lines by length.
 - Shift-tab navigation actions for moving the caret between aligned positions.
 - Optional Project View cleanup that hides the root project path.
+- Optional Project View auto-hide behavior when opening AI terminals or moving files with Shift Tab.
 - Optional Codex and Claude tool windows that open project-root terminals and can resume or continue the latest project session.
 <!-- Plugin description end -->
 

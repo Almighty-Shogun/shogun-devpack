@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+## [1.1.0]
+
+### Added
+
+- Added line sorting for selected editor lines by length.
+- Added optional Project View auto-hide behavior when opening AI terminals or moving files with Shift Tab.
+
+### Fixed
+
+- Fixed Code Shot rendering so transient editor highlights are not included in generated screenshots.
+- Fixed Code Shot editor state restoration after rendering.
+
 ## [1.0.0]
 
 ### Added
