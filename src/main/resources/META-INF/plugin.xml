@@ -1,4 +1,4 @@
-<idea-plugin>
+<idea-plugin require-restart="true">
     <id>ms.shogun.devpack</id>
     <name>Shogun's DevPack</name>
     <vendor email="alm1ghtyshogun1998@gmail.com" url="https://shogun.ms">Shogun</vendor>
