@@ -947,9 +947,7 @@
             </value>
         </option>
         <option name="IDENTIFIER_UNDER_CARET_ATTRIBUTES">
-            <value>
-                <option name="BACKGROUND" value="353940"/>
-            </value>
+            <value/>
         </option>
         <option name="IMPLICIT_ANONYMOUS_CLASS_PARAMETER_ATTRIBUTES">
             <value/>
@@ -1335,9 +1333,7 @@
             </value>
         </option>
         <option name="MATCHED_BRACE_ATTRIBUTES">
-            <value>
-                <option name="BACKGROUND" value="515a6b"/>
-            </value>
+            <value/>
         </option>
         <option name="MESSAGE_ARGUMENT">
             <value>
@@ -2076,9 +2072,7 @@
             </value>
         </option>
         <option name="WRITE_IDENTIFIER_UNDER_CARET_ATTRIBUTES">
-            <value>
-                <option name="BACKGROUND" value="353940"/>
-            </value>
+            <value/>
         </option>
         <option name="WRITE_SEARCH_RESULT_ATTRIBUTES">
             <value>

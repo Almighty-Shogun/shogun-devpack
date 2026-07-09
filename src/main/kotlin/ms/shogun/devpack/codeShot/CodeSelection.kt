@@ -1,44 +1,15 @@
 package ms.shogun.devpack.codeShot
 
 import com.intellij.util.DocumentUtil
-import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.editor.ex.EditorEx
 
 /**
- * Extracts selected editor text in the shape Code Shot should render.
+ * Calculates selected editor text bounds for Code Shot rendering.
  *
  * @author Almighty-Shogun
  * @since 1.1.1
  */
 object CodeSelection {
-    /**
-     * Extracts selected lines and removes the shared indentation from the selected block.
-     *
-     * @param editor Source editor.
-     * @param startOffset First selected document offset.
-     * @param endOffset Exclusive selected document offset.
-     *
-     * @return Text rendered inside the detached screenshot editor.
-     *
-     * @author Almighty-Shogun
-     * @since 1.1.1
-     */
-    fun text(editor: EditorEx, startOffset: Int, endOffset: Int): String {
-        val document = editor.document
-
-        val selectionEndOffset = endOffset.coerceAtLeast(startOffset)
-        val lastSelectedOffset = (selectionEndOffset - 1).coerceAtLeast(startOffset)
-
-        val startLine = document.getLineNumber(startOffset)
-        val endLine = document.getLineNumber(lastSelectedOffset) + 1
-
-        val lines = (startLine until endLine).map { line ->
-            document.getText(TextRange(document.getLineStartOffset(line), document.getLineEndOffset(line)))
-        }
-
-        return lines.removeCommonIndent().joinToString("\n")
-    }
-
     /**
      * Finds the tight right edge of selected render text.
      *
@@ -64,8 +35,13 @@ object CodeSelection {
                 0
             } else {
                 val lastCharacterOffset = lineEndOffset - 1
+                val lineEndInlayWidth = editor.inlayModel
+                    .getAfterLineEndElementsForLogicalLine(line)
+                    .sumOf { inlay ->
+                        inlay.widthInPixels
+                    }
 
-                editor.offsetToXY(lastCharacterOffset).x + fontMetrics.charWidth(characters[lastCharacterOffset])
+                editor.offsetToXY(lastCharacterOffset).x + fontMetrics.charWidth(characters[lastCharacterOffset]) + lineEndInlayWidth
             }
         }
     }
@@ -102,35 +78,4 @@ object CodeSelection {
         } ?: 0
     }
 
-    /**
-     * Removes shared leading whitespace from non-empty lines.
-     *
-     * @return Lines without source-context indentation.
-     *
-     * @author Almighty-Shogun
-     * @since 1.1.1
-     */
-    private fun List<String>.removeCommonIndent(): List<String> {
-        val indent = this
-            .filter { line ->
-                line.isNotBlank()
-            }
-            .map { line ->
-                line.takeWhile { character ->
-                    character == ' ' || character == '\t'
-                }
-            }
-            .reduceOrNull { commonIndent, lineIndent ->
-                commonIndent.commonPrefixWith(lineIndent)
-            }
-            .orEmpty()
-
-        if (indent.isEmpty()) {
-            return this
-        }
-
-        return map { line ->
-            line.removePrefix(indent)
-        }
-    }
 }

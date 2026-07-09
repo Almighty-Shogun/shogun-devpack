@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+## [1.2.0]
+
+### Changed
+
+- Changed Code Shot to render screenshots from the active editor instead of creating a detached editor.
+- Changed Code Shot to rely on the bundled color scheme for suppressing matching tag, matched brace, and identifier-under-caret highlights.
+
+### Fixed
+
+- Fixed Code Shot screenshots so only the selected editor lines are rendered.
+- Fixed Code Shot screenshots so syntax colors are preserved in TypeScript, HTML, Vue, and other highlighted files.
+- Fixed Code Shot screenshots so HTML/XML matching tag highlight backgrounds such as `<template>` are no longer captured.
+- Fixed Code Shot screenshots clipping after-line-end inlay text such as usage hints.
+
 ## [1.1.1]
 
 ### Fixed
