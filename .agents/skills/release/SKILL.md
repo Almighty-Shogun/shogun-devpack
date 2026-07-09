@@ -110,7 +110,13 @@ Before creating the release, state:
 - comparison base
 - Gradle checks that passed
 
-Ask for explicit confirmation. Do not run `gh release create` until the user clearly approves.
+Show the exact `gh release create` command that will be run, then ask:
+
+```text
+Do you want me to create the release <version>?
+```
+
+Do not run `gh release create` until the user clearly approves.
 
 ## Create Release
 
