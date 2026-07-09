@@ -16,22 +16,23 @@ import com.intellij.util.ui.StartupUiUtil
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.ex.EditorEx
 import com.intellij.openapi.editor.LogicalPosition
-import com.intellij.openapi.editor.impl.EditorImpl
-import com.intellij.openapi.editor.colors.EditorColors
 import com.intellij.openapi.editor.ex.util.EditorUIUtil
-import com.intellij.openapi.editor.markup.TextAttributes
-import com.intellij.openapi.editor.colors.CodeInsightColors
-import com.intellij.openapi.editor.colors.EditorColorsScheme
 
 /**
- * Swing component that paints prepared editor text for screenshot rendering.
+ * Swing component that paints a selected editor range for screenshot rendering.
  *
  * @param editor Editor instance to paint.
+ * @param startOffset First selected document offset.
+ * @param endOffset Exclusive selected document offset.
  *
  * @author Almighty-Shogun
  * @since 1.0.0
  */
-class CodeFragment private constructor(private val editor: EditorEx) : JPanel() {
+class CodeFragment private constructor(
+    private val editor: EditorEx,
+    private val startOffset: Int,
+    private val endOffset: Int,
+) : JPanel() {
     init {
         this.editor.isPurePaintingMode = true
 
@@ -51,20 +52,23 @@ class CodeFragment private constructor(private val editor: EditorEx) : JPanel() 
     private fun doInitialize() {
         val settings = this.editor.settings
 
-        val originalColorScheme = this.editor.colorsScheme
         val originalCaretRowShown = settings.isCaretRowShown
         val originalHighlightSelectionOccurrences = settings.isHighlightSelectionOccurrences
 
-        val newRendering = this.editor is EditorImpl
-        val savedScrollOffset = if (newRendering) 0 else this.editor.scrollingModel.horizontalScrollOffset
+        val selectionModel = this.editor.selectionModel
+
+        val originalSelectionStart = selectionModel.selectionStart
+        val originalSelectionEnd = selectionModel.selectionEnd
+
+        val hadSelection = selectionModel.hasSelection()
 
         val foldingModel = this.editor.foldingModel
         val isFoldingEnabled = foldingModel.isFoldingEnabled
 
-        this.editor.colorsScheme = cleanScreenshotColorScheme(originalColorScheme)
-
         settings.isCaretRowShown = false
         settings.isHighlightSelectionOccurrences = false
+
+        selectionModel.removeSelection()
 
         foldingModel.isFoldingEnabled = false
 
@@ -74,10 +78,13 @@ class CodeFragment private constructor(private val editor: EditorEx) : JPanel() 
         val renderScale = CodeScreenshotRenderer.getRenderScale(this.editor.component)
 
         try {
-            val startLine = 0
-
             val document = this.editor.document
-            val endLine = document.lineCount
+
+            val selectionEndOffset = endOffset.coerceAtLeast(startOffset)
+            val lastSelectedOffset = (selectionEndOffset - 1).coerceAtLeast(startOffset)
+
+            val startLine = document.getLineNumber(startOffset)
+            val endLine = document.getLineNumber(lastSelectedOffset) + 1
 
             val indentStart = CodeSelection.commonLineIndent(this.editor, startLine, endLine)
 
@@ -95,15 +102,6 @@ class CodeFragment private constructor(private val editor: EditorEx) : JPanel() 
                 this.editor.lineHeight
             } else {
                 bottomPoint.y - topPoint.y
-            }
-
-            this.editor.component.setSize(textImageWidth, textImageHeight)
-            this.editor.contentComponent.setSize(textImageWidth, textImageHeight)
-
-            this.editor.component.doLayout()
-
-            if (savedScrollOffset > 0) {
-                this.editor.scrollingModel.scrollHorizontally(0)
             }
 
             textImage = UIUtil.createImage(
@@ -137,11 +135,9 @@ class CodeFragment private constructor(private val editor: EditorEx) : JPanel() 
             settings.isCaretRowShown = originalCaretRowShown
             settings.isHighlightSelectionOccurrences = originalHighlightSelectionOccurrences
 
-            this.editor.colorsScheme = originalColorScheme
-        }
-
-        if (savedScrollOffset > 0) {
-            this.editor.scrollingModel.scrollHorizontally(savedScrollOffset)
+            if (hadSelection) {
+                selectionModel.setSelection(originalSelectionStart, originalSelectionEnd)
+            }
         }
 
         val component = object : JComponent() {
@@ -189,47 +185,22 @@ class CodeFragment private constructor(private val editor: EditorEx) : JPanel() 
          */
         fun createCodeFragmentComponent(editor: Editor, startOffset: Int, endOffset: Int): CodeFragment {
             val sourceEditor = editor as EditorEx
-            val selectedText = CodeSelection.text(sourceEditor, startOffset, endOffset)
-            val detachedEditor = DetachedCodeEditor.create(sourceEditor, selectedText)
+            val originalBackgroundColor = sourceEditor.backgroundColor
             val backgroundColor = CodeScreenshotRenderer.getBackgroundColor(sourceEditor)
 
             try {
-                detachedEditor.backgroundColor = backgroundColor
+                sourceEditor.backgroundColor = backgroundColor
 
-                val fragment = CodeFragment(detachedEditor)
+                val fragment = CodeFragment(sourceEditor, startOffset, endOffset)
 
                 fragment.background = backgroundColor
 
                 return fragment
             } finally {
-                DetachedCodeEditor.release(detachedEditor)
+                sourceEditor.backgroundColor = originalBackgroundColor
             }
         }
-    }
 
-    /**
-     * Creates a color scheme clone without editor-state highlights that should not appear in screenshots.
-     *
-     * @param colorScheme Active editor color scheme.
-     *
-     * @return Screenshot color scheme.
-     *
-     * @author Almighty-Shogun
-     * @since 1.1.0
-     */
-    private fun cleanScreenshotColorScheme(colorScheme: EditorColorsScheme): EditorColorsScheme =
-        this.editor.createBoundColorSchemeDelegate(colorScheme).apply {
-            setAttributes(EditorColors.IDENTIFIER_UNDER_CARET_ATTRIBUTES, TextAttributes())
-            setAttributes(EditorColors.WRITE_IDENTIFIER_UNDER_CARET_ATTRIBUTES, TextAttributes())
-            setAttributes(EditorColors.SEARCH_RESULT_ATTRIBUTES, TextAttributes())
-            setAttributes(EditorColors.WRITE_SEARCH_RESULT_ATTRIBUTES, TextAttributes())
-            setAttributes(EditorColors.TEXT_SEARCH_RESULT_ATTRIBUTES, TextAttributes())
-            setAttributes(EditorColors.LIVE_TEMPLATE_ATTRIBUTES, TextAttributes())
-            setAttributes(EditorColors.LIVE_TEMPLATE_INACTIVE_SEGMENT, TextAttributes())
-            setAttributes(CodeInsightColors.MATCHED_BRACE_ATTRIBUTES, TextAttributes())
-            setAttributes(CodeInsightColors.UNMATCHED_BRACE_ATTRIBUTES, TextAttributes())
-            setAttributes(CodeInsightColors.BLINKING_HIGHLIGHTS_ATTRIBUTES, TextAttributes())
-            setColor(EditorColors.CARET_ROW_COLOR, defaultBackground)
-        }
+    }
 
 }
