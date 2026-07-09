@@ -18,8 +18,8 @@ All commit messages, branches, issues and/or pull requests will be in English.
 
 - **Main** — This is the `main` branch. This contains the latest stable release and is the exact source running in production.
 - **Development** — This is the `development` branch. This contains the latest staging release that is marked for deployment and is the exact source running on staging.
-- **Feature** — This is a `feature/*` branch. This contains a new feature that will be added. Any feature should have its own branch. Once completed the branch should be merged into the `development` branch.
-- **Bugfix** — This is a `bugfix/*` branch. This contains a bugfix that will be added. Any bugfix should have its own branch. Once completed the branch should be merged into the `development` branch.
+- **Feature** — This is a `feature/*` or `feat/*` branch. This contains a new feature that will be added. Any feature should have its own branch. Once completed the branch should be merged into the `development` branch.
+- **Bugfix** — This is a `bugfix/*` or `fix/*` branch. This contains a bugfix that will be added. Any bugfix should have its own branch. Once completed the branch should be merged into the `development` branch.
 
 ### Commit messages
 
