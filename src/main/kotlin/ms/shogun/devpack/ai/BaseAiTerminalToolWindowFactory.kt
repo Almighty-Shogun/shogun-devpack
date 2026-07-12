@@ -116,6 +116,10 @@ abstract class BaseAiTerminalToolWindowFactory(private val definition: AiTermina
 
         Disposer.register(parentDisposable, sessionDisposable)
 
+        AiTerminalEscapeKeyForwarder.install(widget, sessionDisposable) {
+            activeSession
+        }
+
         terminalPanel.removeAll()
         terminalPanel.add(widget.component, BorderLayout.CENTER)
         terminalPanel.revalidate()
