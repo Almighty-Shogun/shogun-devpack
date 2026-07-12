@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Fixed Escape in Codex and Claude terminals so it is sent to the active prompt even when an editor file is open.
+
 ## [1.2.0]
 
 ### Changed
