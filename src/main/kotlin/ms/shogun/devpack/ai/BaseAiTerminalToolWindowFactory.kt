@@ -48,12 +48,19 @@ abstract class BaseAiTerminalToolWindowFactory(private val definition: AiTermina
 
         rootPanel.add(terminalPanel, BorderLayout.CENTER)
 
-        val content = ContentFactory.getInstance().createContent(rootPanel, definition.toolWindowId, false)
+        val content = ContentFactory
+            .getInstance()
+            .createContent(rootPanel, project.name.ifBlank { definition.toolWindowId }, false)
 
         toolWindow.contentManager.addContent(content)
         toolWindow.contentManager.setSelectedContent(content)
 
-        toolWindow.setTitleActions(listOf(createCloseSessionAction(toolWindow, state)))
+        toolWindow.setTitleActions(
+            listOf(
+                createReloadSessionAction(project, toolWindow.disposable, state),
+                createCloseSessionAction(toolWindow, state),
+            ),
+        )
         toolWindow.setAdditionalGearActions(DefaultActionGroup())
 
         registerSessionStarter(project, toolWindow, state)
@@ -186,20 +193,61 @@ abstract class BaseAiTerminalToolWindowFactory(private val definition: AiTermina
      * @since 1.0.0
      */
     private fun closeSession(toolWindow: ToolWindow, state: AiTerminalSessionState) {
+        stopSession(state)
+        resetSessionPanel(state)
+
+        toolWindow.hide(null)
+    }
+
+    /**
+     * Reloads the active terminal session without hiding the tool window.
+     *
+     * @param project Current project.
+     * @param parentDisposable Parent disposable used to own the replacement terminal session.
+     * @param state Project tool-window state that owns the active session.
+     *
+     * @author Almighty-Shogun
+     * @since Unreleased
+     */
+    private fun reloadSession(project: Project, parentDisposable: Disposable, state: AiTerminalSessionState) {
+        stopSession(state)
+        resetSessionPanel(state)
+
+        startSession(project, parentDisposable, state)
+        focusActiveSession(project, state)
+    }
+
+    /**
+     * Stops the active terminal widget and disposes the resources that own it.
+     *
+     * @param state Project tool-window state that owns the active session.
+     *
+     * @author Almighty-Shogun
+     * @since Unreleased
+     */
+    private fun stopSession(state: AiTerminalSessionState) {
         state.activeSession?.close()
         state.activeSession = null
         state.activeSessionDisposable?.let { disposable ->
             Disposer.dispose(disposable)
         }
         state.activeSessionDisposable = null
+    }
 
+    /**
+     * Clears the terminal panel and restores the empty-state message.
+     *
+     * @param state Project tool-window state that owns the terminal panel.
+     *
+     * @author Almighty-Shogun
+     * @since Unreleased
+     */
+    private fun resetSessionPanel(state: AiTerminalSessionState) {
         state.sessionPanel.removeAll()
         state.sessionPanel.emptyText.text = emptyText()
 
         state.sessionPanel.revalidate()
         state.sessionPanel.repaint()
-
-        toolWindow.hide(null)
     }
 
     /**
@@ -215,6 +263,36 @@ abstract class BaseAiTerminalToolWindowFactory(private val definition: AiTermina
             message(definition.emptyTextMessageKey)
         } else {
             message("ai.disabled.empty-text", definition.toolWindowId)
+        }
+
+    /**
+     * Creates the title-bar action that reloads the current terminal session.
+     *
+     * @param project Current project.
+     * @param parentDisposable Parent disposable used to own the replacement terminal session.
+     * @param state Project tool-window state that owns the active session.
+     *
+     * @return Action displayed in the tool-window title bar.
+     *
+     * @author Almighty-Shogun
+     * @since Unreleased
+     */
+    @Suppress("DialogTitleCapitalization")
+    private fun createReloadSessionAction(
+        project: Project,
+        parentDisposable: Disposable,
+        state: AiTerminalSessionState,
+    ): DumbAwareAction =
+        object : DumbAwareAction(message("ai.reload-session", definition.toolWindowId), null, reloadSessionIcon()) {
+            override fun actionPerformed(event: AnActionEvent) {
+                reloadSession(project, parentDisposable, state)
+            }
+
+            override fun update(event: AnActionEvent) {
+                event.presentation.isEnabled = definition.isEnabled()
+            }
+
+            override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.EDT
         }
 
     /**
@@ -240,6 +318,16 @@ abstract class BaseAiTerminalToolWindowFactory(private val definition: AiTermina
 
             override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.EDT
         }
+
+    /**
+     * Resolves the reload icon for the AI terminal title-bar action.
+     *
+     * @return Reload icon.
+     *
+     * @author Almighty-Shogun
+     * @since Unreleased
+     */
+    private fun reloadSessionIcon(): Icon = AllIcons.Actions.Refresh
 
     /**
      * Creates a larger close icon for the AI terminal title-bar action.
