@@ -16,7 +16,7 @@ import org.jetbrains.plugins.terminal.ShellTerminalWidget
  * Forwards Escape to the active AI terminal before the IDE can treat it as editor focus navigation.
  *
  * @author Almighty-Shogun
- * @since 1.3.0
+ * @since 1.2.1
  */
 internal object AiTerminalEscapeKeyForwarder {
     private const val ESCAPE_CHARACTER = "\u001B"
@@ -29,7 +29,7 @@ internal object AiTerminalEscapeKeyForwarder {
      * @param activeSession Resolver for the currently active AI terminal session.
      *
      * @author Almighty-Shogun
-     * @since 1.3.0
+     * @since 1.2.1
      */
     fun install(widget: ShellTerminalWidget, sessionDisposable: Disposable, activeSession: () -> ShellTerminalWidget?) {
         val component = widget.component
@@ -63,7 +63,7 @@ internal object AiTerminalEscapeKeyForwarder {
      * @return Whether Escape should be forwarded to the terminal process.
      *
      * @author Almighty-Shogun
-     * @since 1.3.0
+     * @since 1.2.1
      */
     private fun shouldForward(
         event: KeyEvent,
@@ -84,7 +84,7 @@ internal object AiTerminalEscapeKeyForwarder {
      * @return Whether the current focus owner is the terminal or one of its children.
      *
      * @author Almighty-Shogun
-     * @since 1.3.0
+     * @since 1.2.1
      */
     private fun KeyboardFocusManager.hasFocusInside(component: Component): Boolean {
         val focusOwner = focusOwner ?: return false
@@ -98,7 +98,7 @@ internal object AiTerminalEscapeKeyForwarder {
      * @return Whether the key event represents plain Escape.
      *
      * @author Almighty-Shogun
-     * @since 1.3.0
+     * @since 1.2.1
      */
     private fun KeyEvent.isPlainEscapePress(): Boolean =
         id == KeyEvent.KEY_PRESSED &&
@@ -112,7 +112,7 @@ internal object AiTerminalEscapeKeyForwarder {
      * @param widget Terminal widget receiving the Escape character.
      *
      * @author Almighty-Shogun
-     * @since 1.3.0
+     * @since 1.2.1
      */
     private fun sendEscape(widget: ShellTerminalWidget) {
         runCatching {
