@@ -47,7 +47,7 @@ If Gradle needs to write under `~/.gradle` in a restricted sandbox, request appr
 - Do not use Codex skills unless the user specifically asks for a skill or explicitly asks for a workflow that requires one.
 - Do not revert unrelated local changes. This repo may have user changes in progress.
 - Prefer IntelliJ Platform stable APIs. Avoid deprecated or `@ApiStatus.Experimental` APIs unless the user explicitly accepts the tradeoff.
-- Kotlin KDoc `@since` tags must match the plugin version the code ships in. Determine this from the release target, the matching `CHANGELOG.md` heading, or the latest released tag plus the intended bump. If the target version is not clear, ask the user before adding or changing `@since`.
+- New Kotlin KDoc `@since` tags for unreleased code must use `Unreleased`. Existing released `@since` tags should keep the version they shipped in. The release workflow replaces `@since Unreleased` with the resolved release version after user approval.
 - User-facing strings should generally live in `MyMessageBundle.properties` when they are action/configuration labels.
 - File template resources under `src/main/resources/fileTemplates/internal` are intentionally remapped by `processResources`; preserve that build behavior.
 
