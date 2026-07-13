@@ -1,6 +1,6 @@
 ---
 name: release
-description: Create a stable GitHub release for the Almighty-Shogun/shogun-devpack JetBrains plugin. Use when the user asks to cut, create, publish, or prepare a release. Resolves major, minor, patch, or explicit semver versions, runs safeguards and Gradle checks, generates release notes, requires explicit confirmation, then creates the GitHub release that triggers CI publishing. Never manually publishes to JetBrains Marketplace, pushes tags, creates version commits, or changes plugin versions locally.
+description: Create a stable GitHub release for the Almighty-Shogun/shogun-devpack JetBrains plugin. Use when the user asks to cut, create, publish, or prepare a release. Resolves major, minor, patch, or explicit semver versions, runs safeguards, replaces Unreleased changelog and KDoc markers after approval, commits and pushes release metadata when needed, runs Gradle checks, generates release notes, requires explicit confirmation, then creates the GitHub release that triggers CI publishing. Never manually publishes to JetBrains Marketplace, pushes tags, or edits plugin version files.
 ---
 
 # Release
@@ -14,7 +14,7 @@ Publishing is CI-driven:
 - CI uploads `build/distributions/*` to the GitHub release.
 - CI publishes the plugin to JetBrains Marketplace with repository secrets.
 
-Do not run `publishPlugin`, push release tags manually, create version commits, or edit local version files for a release. The Gradle build reads `pluginVersion` from `-PpluginVersion`; the repository default is intentionally `0.0.0`.
+Do not run `publishPlugin`, push release tags manually, or edit local version files for a release. The Gradle build reads `pluginVersion` from `-PpluginVersion`; the repository default is intentionally `0.0.0`.
 
 The current workflow supports stable releases only. Do not create beta or pre-release releases unless `.github/workflows/release.yml` is updated first.
 
@@ -71,6 +71,56 @@ Rules:
 - If the working tree is dirty, warn that local changes are not included in a release cut from `origin/main`. Continue only if the user accepts that.
 - Capture the `origin/main` SHA. The release must target that SHA.
 - Confirm the repository slug is `Almighty-Shogun/shogun-devpack` unless the user is intentionally releasing a fork.
+
+## Prepare Release Metadata
+
+Before running the release build checks, replace pending release markers when they exist.
+
+Inspect:
+
+```bash
+rg -n "@since Unreleased" src/main/kotlin
+rg -n "^## \\[Unreleased\\]" CHANGELOG.md
+```
+
+Rules:
+
+- New unreleased KDocs use `@since Unreleased` during normal development.
+- `CHANGELOG.md` uses `## [Unreleased]` during normal development.
+- For a release, replace exact `@since Unreleased` occurrences with `@since <version>`.
+- Replace the first exact `## [Unreleased]` heading in `CHANGELOG.md` with `## [<version>]`.
+- Do not modify existing released `@since` tags.
+- Do not edit Gradle version files or create local plugin version commits.
+
+After applying the replacements, show:
+
+```bash
+git diff --stat
+git diff -- CHANGELOG.md src/main/kotlin
+```
+
+Ask:
+
+```text
+Do you approve committing and pushing these release metadata changes?
+```
+
+If the user does not approve, stop before build checks and before release creation.
+
+After approval, verify and commit only the metadata files that changed:
+
+```bash
+git diff --check
+./gradlew compileKotlin
+git add -- CHANGELOG.md <changed-kotlin-files>
+git diff --cached --name-status
+git commit -m "chore: prepare release metadata for <version>"
+git push
+git fetch origin --tags --prune
+git rev-parse origin/main
+```
+
+Capture the new `origin/main` SHA after the push. The release must target this updated SHA.
 
 ## Build Check
 
