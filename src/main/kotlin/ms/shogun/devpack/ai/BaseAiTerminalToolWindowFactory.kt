@@ -4,7 +4,6 @@ import java.io.File
 import java.awt.BorderLayout
 
 import javax.swing.Icon
-import javax.swing.JPanel
 
 import com.intellij.util.ui.JBUI
 import com.intellij.util.IconUtil
@@ -40,16 +39,12 @@ import ms.shogun.devpack.ShogunBundle.message
  * @since 1.0.0
  */
 abstract class BaseAiTerminalToolWindowFactory(private val definition: AiTerminalDefinition) : ToolWindowFactory {
-    private var sessionPanel: JPanel? = null
-    private var activeSession: ShellTerminalWidget? = null
-    private var activeSessionDisposable: Disposable? = null
-
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
         val rootPanel = JBPanel<JBPanel<*>>(BorderLayout()).withBorder(JBUI.Borders.empty(4))
         val terminalPanel = JBPanelWithEmptyText(BorderLayout())
+        val state = AiTerminalSessionState(terminalPanel)
 
         terminalPanel.emptyText.text = emptyText()
-        sessionPanel = terminalPanel
 
         rootPanel.add(terminalPanel, BorderLayout.CENTER)
 
@@ -57,16 +52,19 @@ abstract class BaseAiTerminalToolWindowFactory(private val definition: AiTermina
 
         toolWindow.contentManager.addContent(content)
         toolWindow.contentManager.setSelectedContent(content)
-        toolWindow.setTitleActions(listOf(createCloseSessionAction(toolWindow)))
+
+        toolWindow.setTitleActions(listOf(createCloseSessionAction(toolWindow, state)))
         toolWindow.setAdditionalGearActions(DefaultActionGroup())
 
-        registerSessionStarter(project, toolWindow)
+        registerSessionStarter(project, toolWindow, state)
+
+        if (!toolWindow.isVisible && !toolWindow.isActive) {
+            return
+        }
 
         ApplicationManager.getApplication().invokeLater {
-            if (toolWindow.isVisible && toolWindow.isActive) {
-                startSession(project, toolWindow.disposable)
-                focusActiveSession(project)
-            }
+            startSession(project, toolWindow.disposable, state)
+            focusActiveSession(project, state)
         }
     }
 
@@ -77,19 +75,19 @@ abstract class BaseAiTerminalToolWindowFactory(private val definition: AiTermina
      *
      * @param project Project used to resolve terminal startup options.
      * @param parentDisposable Parent disposable used to own the terminal session.
+     * @param state Project tool-window state that owns the active session.
      *
      * @author Almighty-Shogun
      * @since 1.0.0
      */
-    private fun startSession(project: Project, parentDisposable: Disposable) {
-        if (activeSession != null) {
+    private fun startSession(project: Project, parentDisposable: Disposable, state: AiTerminalSessionState) {
+        if (state.activeSession != null) {
             return
         }
 
-        val terminalPanel = sessionPanel ?: return
-
         if (!definition.isEnabled()) {
-            (terminalPanel as? JBPanelWithEmptyText)?.emptyText?.text = emptyText()
+            state.sessionPanel.emptyText.text = emptyText()
+
             return
         }
 
@@ -111,21 +109,28 @@ abstract class BaseAiTerminalToolWindowFactory(private val definition: AiTermina
             throw error
         }
 
-        activeSession = widget
-        activeSessionDisposable = sessionDisposable
+        state.activeSession = widget
+        state.activeSessionDisposable = sessionDisposable
 
         Disposer.register(parentDisposable, sessionDisposable)
-
-        AiTerminalEscapeKeyForwarder.install(widget, sessionDisposable) {
-            activeSession
+        Disposer.register(sessionDisposable) {
+            if (state.activeSession === widget) {
+                state.activeSession = null
+                state.activeSessionDisposable = null
+            }
         }
 
-        terminalPanel.removeAll()
-        terminalPanel.add(widget.component, BorderLayout.CENTER)
-        terminalPanel.revalidate()
-        terminalPanel.repaint()
+        AiTerminalEscapeKeyForwarder.install(widget, sessionDisposable) {
+            state.activeSession
+        }
 
-        focusActiveSession(project)
+        state.sessionPanel.removeAll()
+        state.sessionPanel.add(widget.component, BorderLayout.CENTER)
+
+        state.sessionPanel.revalidate()
+        state.sessionPanel.repaint()
+
+        focusActiveSession(project, state)
     }
 
     /**
@@ -133,11 +138,12 @@ abstract class BaseAiTerminalToolWindowFactory(private val definition: AiTermina
      *
      * @param project Current project.
      * @param toolWindow AI terminal tool window.
+     * @param state Project tool-window state that owns the active session.
      *
      * @author Almighty-Shogun
      * @since 1.0.0
      */
-    private fun registerSessionStarter(project: Project, toolWindow: ToolWindow) {
+    private fun registerSessionStarter(project: Project, toolWindow: ToolWindow, state: AiTerminalSessionState) {
         project.messageBus
             .connect(toolWindow.disposable)
             .subscribe(
@@ -145,8 +151,8 @@ abstract class BaseAiTerminalToolWindowFactory(private val definition: AiTermina
                 object : ToolWindowManagerListener {
                     override fun toolWindowShown(shownToolWindow: ToolWindow) {
                         if (shownToolWindow.id == definition.toolWindowId) {
-                            startSession(project, toolWindow.disposable)
-                            focusActiveSession(project)
+                            startSession(project, toolWindow.disposable, state)
+                            focusActiveSession(project, state)
                         }
                     }
                 },
@@ -157,12 +163,13 @@ abstract class BaseAiTerminalToolWindowFactory(private val definition: AiTermina
      * Requests keyboard focus for the active terminal session.
      *
      * @param project Current project.
+     * @param state Project tool-window state that owns the active session.
      *
      * @author Almighty-Shogun
      * @since 1.0.0
      */
-    private fun focusActiveSession(project: Project) {
-        val focusableComponent = activeSession?.preferredFocusableComponent ?: return
+    private fun focusActiveSession(project: Project, state: AiTerminalSessionState) {
+        val focusableComponent = state.activeSession?.preferredFocusableComponent ?: return
 
         ApplicationManager.getApplication().invokeLater {
             IdeFocusManager.getInstance(project).requestFocus(focusableComponent, true)
@@ -173,22 +180,24 @@ abstract class BaseAiTerminalToolWindowFactory(private val definition: AiTermina
      * Closes the active terminal session and hides the tool window.
      *
      * @param toolWindow AI terminal tool window.
+     * @param state Project tool-window state that owns the active session.
      *
      * @author Almighty-Shogun
      * @since 1.0.0
      */
-    private fun closeSession(toolWindow: ToolWindow) {
-        activeSession?.close()
-        activeSession = null
-        activeSessionDisposable?.let { disposable ->
+    private fun closeSession(toolWindow: ToolWindow, state: AiTerminalSessionState) {
+        state.activeSession?.close()
+        state.activeSession = null
+        state.activeSessionDisposable?.let { disposable ->
             Disposer.dispose(disposable)
         }
-        activeSessionDisposable = null
+        state.activeSessionDisposable = null
 
-        sessionPanel?.removeAll()
-        (sessionPanel as? JBPanelWithEmptyText)?.emptyText?.text = emptyText()
-        sessionPanel?.revalidate()
-        sessionPanel?.repaint()
+        state.sessionPanel.removeAll()
+        state.sessionPanel.emptyText.text = emptyText()
+
+        state.sessionPanel.revalidate()
+        state.sessionPanel.repaint()
 
         toolWindow.hide(null)
     }
@@ -212,20 +221,21 @@ abstract class BaseAiTerminalToolWindowFactory(private val definition: AiTermina
      * Creates the title-bar action that closes the current terminal session.
      *
      * @param toolWindow AI terminal tool window.
+     * @param state Project tool-window state that owns the active session.
      *
      * @return Action displayed in the tool-window title bar.
      *
      * @author Almighty-Shogun
      * @since 1.0.0
      */
-    private fun createCloseSessionAction(toolWindow: ToolWindow): DumbAwareAction =
+    private fun createCloseSessionAction(toolWindow: ToolWindow, state: AiTerminalSessionState): DumbAwareAction =
         object : DumbAwareAction(message(definition.closeSessionMessageKey), null, closeSessionIcon()) {
             override fun actionPerformed(event: AnActionEvent) {
-                closeSession(toolWindow)
+                closeSession(toolWindow, state)
             }
 
             override fun update(event: AnActionEvent) {
-                event.presentation.isEnabled = activeSession != null
+                event.presentation.isEnabled = state.activeSession != null
             }
 
             override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.EDT
@@ -302,6 +312,21 @@ abstract class BaseAiTerminalToolWindowFactory(private val definition: AiTermina
             .orEmpty()
             .map { nodeVersionDirectory -> File(nodeVersionDirectory, "bin").path }
             .filter { executableDirectory -> File(executableDirectory).isDirectory }
+
+    /**
+     * Mutable terminal state scoped to one project tool-window content instance.
+     *
+     * @property sessionPanel Panel that owns this terminal widget.
+     * @property activeSession Terminal widget currently running in this content.
+     * @property activeSessionDisposable Disposable that owns the current terminal widget.
+     *
+     * @author Almighty-Shogun
+     * @since Unreleased
+     */
+    private class AiTerminalSessionState(val sessionPanel: JBPanelWithEmptyText) {
+        var activeSession: ShellTerminalWidget? = null
+        var activeSessionDisposable: Disposable? = null
+    }
 
     private companion object {
         const val PATH_ENVIRONMENT_VARIABLE = "PATH"
