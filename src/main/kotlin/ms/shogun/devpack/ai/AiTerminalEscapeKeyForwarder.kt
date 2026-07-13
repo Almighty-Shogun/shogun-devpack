@@ -9,6 +9,7 @@ import javax.swing.SwingUtilities
 
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.util.Disposer
+import com.intellij.openapi.application.ApplicationManager
 
 import org.jetbrains.plugins.terminal.ShellTerminalWidget
 
@@ -40,7 +41,9 @@ internal object AiTerminalEscapeKeyForwarder {
                 return@KeyEventDispatcher false
             }
 
+            event.consume()
             sendEscape(widget)
+
             true
         }
 
@@ -107,7 +110,7 @@ internal object AiTerminalEscapeKeyForwarder {
             !isConsumed
 
     /**
-     * Writes a raw Escape character to the terminal process.
+     * Writes a raw Escape character to the terminal process outside the key event dispatch path.
      *
      * @param widget Terminal widget receiving the Escape character.
      *
@@ -115,10 +118,12 @@ internal object AiTerminalEscapeKeyForwarder {
      * @since 1.2.1
      */
     private fun sendEscape(widget: ShellTerminalWidget) {
-        runCatching {
-            widget.executeWithTtyConnector { ttyConnector ->
-                if (ttyConnector.isConnected) {
-                    ttyConnector.write(ESCAPE_CHARACTER)
+        ApplicationManager.getApplication().executeOnPooledThread {
+            runCatching {
+                widget.executeWithTtyConnector { ttyConnector ->
+                    if (ttyConnector.isConnected) {
+                        ttyConnector.write(ESCAPE_CHARACTER)
+                    }
                 }
             }
         }

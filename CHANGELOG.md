@@ -1,5 +1,12 @@
 # Shogun's DevPack Changelog
 
+## [Unreleased]
+
+### Fixed
+
+- Fixed Codex and Claude terminal sessions so multiple JetBrains project windows keep independent active terminal state.
+- Fixed Escape forwarding in Codex and Claude terminals so interrupting a prompt no longer writes directly to the terminal connector from the key event dispatcher.
+
 ## [1.2.1]
 
 ### Fixed
