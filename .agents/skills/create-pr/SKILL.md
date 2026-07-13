@@ -1,21 +1,25 @@
 ---
 name: create-pr
-description: Create a GitHub pull request for Almighty-Shogun/shogun-devpack from a requested branch name. Use when the user invokes $create-pr with a branch parameter, asks to create a branch for current changes, commit the selected files through the user-level $commit skill, generate a PR title/body in the repository's personal style, and create the PR only after explicit approval.
+description: Create a GitHub pull request for Almighty-Shogun/shogun-devpack from an optional branch name. Use when the user invokes $create-pr, optionally with a fix/* or feat/* branch parameter, asks to reuse the current fix/* or feat/* branch, infer a branch name for current changes, commit selected files through the user-level $commit skill, generate a PR title/body in the repository's personal style, and create the PR only after explicit approval.
 ---
 
 # Create PR
 
 Create a focused pull request for `Almighty-Shogun/shogun-devpack`.
 
-The user should invoke this skill with one branch parameter:
+The user may invoke this skill with or without a branch parameter:
 
 ```text
+$create-pr
 $create-pr fix/ai-terminal-session
 ```
 
 ## Rules
 
-- Require a branch name parameter. If it is missing, ask for it and stop.
+- Accept only optional `fix/*` or `feat/*` branch parameters. Do not invent other prefixes.
+- If no branch parameter is provided and the current branch is already `fix/*` or `feat/*`, use the current branch.
+- If no branch parameter is provided and the current branch is not `fix/*` or `feat/*`, infer a concise `fix/<slug>` or `feat/<slug>` branch name from the requested work and local changes.
+- Ask the user for a branch name when it is unclear whether the work is a fix or feature, or when the branch summary cannot be inferred confidently.
 - Do not inspect previous PRs just to infer writing style. Use the PR writing rules in this skill.
 - Do not create a PR until the user approves the proposed title and body.
 - Do not manually stage or commit changes when the user-level `$commit` skill is available. Invoke `$commit` after determining the intended file scope.
@@ -41,9 +45,20 @@ git diff --cached --stat
 git diff --cached --name-status
 ```
 
-Validate the requested branch name:
+Resolve the target branch name:
+
+- If the user provided a branch parameter, use it as `<branch>`.
+- If no branch parameter was provided and the current branch starts with `fix/` or `feat/`, use the current branch as `<branch>`.
+- If no branch parameter was provided and the current branch does not start with `fix/` or `feat/`, infer `<branch>` from the work.
+- Use `fix/<slug>` for bug fixes, regressions, broken behavior, or reliability fixes.
+- Use `feat/<slug>` for new user-facing behavior or capabilities.
+- Keep inferred slugs lowercase, hyphen-separated, and concise.
+- If the branch type or slug is unclear, ask the user for the branch name and stop.
+
+Validate the resolved branch name:
 
 - Allow only a normal Git branch name with no whitespace.
+- Require the branch name to start with `fix/` or `feat/`.
 - Reject names containing `..`, `@{`, `//`, leading `-`, trailing `/`, or `.lock`.
 - Reject protected branch names such as `main`, `master`, `development`, or `release`.
 
@@ -54,7 +69,7 @@ git rev-parse --verify "<branch>"
 git ls-remote --heads origin "<branch>"
 ```
 
-If the current branch already matches `<branch>`, continue. If the branch exists locally or remotely, stop and ask whether to use that branch or choose a new name. Otherwise, create it:
+If the current branch already matches `<branch>`, continue. If the branch exists locally or remotely and the current branch does not match it, stop and ask whether to switch to that branch, use another name, or cancel. Otherwise, create it:
 
 ```bash
 git switch -c "<branch>"
