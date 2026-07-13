@@ -1,6 +1,6 @@
 # Shogun's DevPack Changelog
 
-## [Unreleased]
+## [1.3.0]
 
 ### Added
 

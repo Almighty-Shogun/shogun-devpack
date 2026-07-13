@@ -207,7 +207,7 @@ abstract class BaseAiTerminalToolWindowFactory(private val definition: AiTermina
      * @param state Project tool-window state that owns the active session.
      *
      * @author Almighty-Shogun
-     * @since Unreleased
+     * @since 1.3.0
      */
     private fun reloadSession(project: Project, parentDisposable: Disposable, state: AiTerminalSessionState) {
         stopSession(state)
@@ -223,7 +223,7 @@ abstract class BaseAiTerminalToolWindowFactory(private val definition: AiTermina
      * @param state Project tool-window state that owns the active session.
      *
      * @author Almighty-Shogun
-     * @since Unreleased
+     * @since 1.3.0
      */
     private fun stopSession(state: AiTerminalSessionState) {
         state.activeSession?.close()
@@ -240,7 +240,7 @@ abstract class BaseAiTerminalToolWindowFactory(private val definition: AiTermina
      * @param state Project tool-window state that owns the terminal panel.
      *
      * @author Almighty-Shogun
-     * @since Unreleased
+     * @since 1.3.0
      */
     private fun resetSessionPanel(state: AiTerminalSessionState) {
         state.sessionPanel.removeAll()
@@ -275,7 +275,7 @@ abstract class BaseAiTerminalToolWindowFactory(private val definition: AiTermina
      * @return Action displayed in the tool-window title bar.
      *
      * @author Almighty-Shogun
-     * @since Unreleased
+     * @since 1.3.0
      */
     @Suppress("DialogTitleCapitalization")
     private fun createReloadSessionAction(
@@ -325,7 +325,7 @@ abstract class BaseAiTerminalToolWindowFactory(private val definition: AiTermina
      * @return Reload icon.
      *
      * @author Almighty-Shogun
-     * @since Unreleased
+     * @since 1.3.0
      */
     private fun reloadSessionIcon(): Icon = AllIcons.Actions.Refresh
 
@@ -409,7 +409,7 @@ abstract class BaseAiTerminalToolWindowFactory(private val definition: AiTermina
      * @property activeSessionDisposable Disposable that owns the current terminal widget.
      *
      * @author Almighty-Shogun
-     * @since Unreleased
+     * @since 1.3.0
      */
     private class AiTerminalSessionState(val sessionPanel: JBPanelWithEmptyText) {
         var activeSession: ShellTerminalWidget? = null
