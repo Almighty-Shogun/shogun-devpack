@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- Added a reload action for Codex and Claude terminal sessions so the current session can be restarted without closing and reopening the tool window.
+- Added project names to Codex and Claude terminal tab titles while keeping the tool window names unchanged.
+
 ### Fixed
 
 - Fixed Codex and Claude terminal sessions so multiple JetBrains project windows keep independent active terminal state.
