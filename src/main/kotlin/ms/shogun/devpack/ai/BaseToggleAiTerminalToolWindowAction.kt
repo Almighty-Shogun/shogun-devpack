@@ -28,7 +28,7 @@ abstract class BaseToggleAiTerminalToolWindowAction(private val definition: AiTe
         val project = event.project ?: return
         val toolWindow = ToolWindowManager.getInstance(project).getToolWindow(definition.toolWindowId) ?: return
 
-        if (toolWindow.isVisible) {
+        if (toolWindow.isVisible && toolWindow.isActive) {
             toolWindow.hide(null)
         } else {
             hideProjectView(project)
