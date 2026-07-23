@@ -1,5 +1,11 @@
 # Shogun's DevPack Changelog
 
+## [Unreleased]
+
+### Changed
+
+- Changed Codex and Claude terminal shortcuts so they focus a visible inactive terminal instead of closing it.
+
 ## [1.3.0]
 
 ### Added
